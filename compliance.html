@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Plan Checker - SwiftPermit</title>
+    <link rel="stylesheet" href="index.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Load pdf.js for local PDF text extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+</head>
+
+<body>
+    <div class="background-animation"></div>
+    <nav class="navbar">
+        <div class="nav-brand">SwiftPermit</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="compliance.html" class="active">AI Plan Checker</a>
+            <a href="about.html">About Us</a>
+        </div>
+    </nav>
+
+    <main class="compliance-container"
+        style="padding-top: 8rem; max-width: 1000px; margin: 0 auto; padding-bottom: 4rem;">
+
+        <div class="header-section">
+            <h1>Automated Compliance Checker</h1>
+            <p>Upload your construction plan details (PDF or Text Documents) to instantly verify adherence to
+                Chesterfield
+                zoning rules.</p>
+        </div>
+
+        <div class="upload-container">
+            <div class="upload-zone" id="dropZone">
+                <div class="upload-icon">📄</div>
+                <h3>Drag & Drop Building Plans Here</h3>
+                <p>or click to browse (.pdf or .txt documents)</p>
+                <input type="file" id="fileInput" accept=".txt, text/plain, .pdf, application/pdf" hidden>
+            </div>
+
+            <div id="fileSelectionDisplay" class="file-display hidden">
+                <span class="file-icon">📋</span>
+                <span id="selectedFileName">No file selected</span>
+                <button id="removeFileBtn" class="remove-btn">✕</button>
+            </div>
+
+            <button id="analyzeBtn" class="analyze-btn" disabled>
+                Analyze Plan
+            </button>
+        </div>
+
+        <div id="scanningStatus" class="status-panel hidden">
+            <div class="spinner"></div>
+            <h3 id="statusText">Analyzing Plan Data...</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p id="fallbackWarning" style="color: #f59e0b; font-size: 0.9em; margin-top: 10px;" class="hidden">Live AI
+                unavailable or failed. Falling back to robust offline mock analysis...</p>
+        </div>
+
+        <div id="resultsDashboard" class="results-dashboard hidden">
+            <div class="dashboard-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="margin: 0;">Compliance Report</h2>
+                <div class="action-buttons" style="display: flex; gap: 1rem;">
+                    <button id="downloadReportBtn" class="analyze-btn"
+                        style="padding: 0.6rem 1.2rem; font-size: 0.95rem; margin: 0; width: auto; background: linear-gradient(135deg, #10b981, #059669);">
+                        Download Report
+                    </button>
+                    <button id="scanAnotherBtn" class="analyze-btn"
+                        style="padding: 0.6rem 1.2rem; font-size: 0.95rem; margin: 0; width: auto; background: linear-gradient(135deg, #475569, #1e293b);">
+                        Scan Another
+                    </button>
+                </div>
+            </div>
+            <div class="summary-stats">
+                <div class="stat-card error-stat">
+                    <span class="stat-num" id="errorCount">0</span>
+                    <span class="stat-label">Violations Found</span>
+                </div>
+                <div class="stat-card warning-stat">
+                    <span class="stat-num" id="warningCount">0</span>
+                    <span class="stat-label">Warnings</span>
+                </div>
+                <div class="stat-card pass-stat">
+                    <span class="stat-num" id="passCount">0</span>
+                    <span class="stat-label">Rules Passed</span>
+                </div>
+            </div>
+
+            <div class="issues-list" id="issuesList">
+                <!-- Issues will be injected here via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <script src="config.js?v=7"></script>
+    <script src="compliance.js?v=7"></script>
+</body>
+
+</html>
