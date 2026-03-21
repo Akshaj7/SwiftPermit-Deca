@@ -71,6 +71,7 @@ body {
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #2563eb, #9333ea);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -158,8 +159,6 @@ body {
     max-width: 100%;
     height: auto;
     object-fit: contain;
-    mix-blend-mode: darken;
-    /* Ensures white background of pdf image blends nicely */
 }
 
 /* Tagline */
@@ -170,9 +169,12 @@ body {
     letter-spacing: -1px;
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
-    max-width: 800px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -216,6 +218,64 @@ body {
     font-size: 1.1rem;
     max-width: 600px;
     margin: 0 auto;
+}
+
+/* City Selection Cards */
+.city-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.city-card {
+    flex: 1;
+    max-width: 180px;
+    padding: 1.2rem 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.city-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.1);
+}
+
+.city-card.active {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #2563eb;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.18);
+    transform: translateY(-2px);
+}
+
+.city-card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.city-card-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+}
+
+.city-card-status {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.city-card.active .city-card-status {
+    color: #2563eb;
+    font-weight: 600;
 }
 
 /* Upload Container & Button */

@@ -21,6 +21,59 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFileData = null;
     let currentFileIsPdf = false;
 
+    // --- City Rules Data ---
+    const CITY_RULES = {
+        chesterfield: {
+            name: "Chesterfield Zone R-1",
+            label: "Chesterfield",
+            rules: `ZONING AND BUILDING RULES FOR CHESTERFIELD ZONE R-1 (Single Family Residential):
+            1. Setbacks: Minimum front yard setback is 25 feet. Minimum rear yard setback is 20 feet. Minimum side yard setback is 10 feet.
+            2. Building Height: Maximum allowable building height is 35 feet.
+            3. Lot Coverage: Total building footprint must not exceed 30% of the total lot size.
+            4. Parking: A minimum of 2 off-street parking spaces must be provided per dwelling unit.
+            5. Fencing: Fences in the front yard must not exceed 4 feet in height. Fences in the rear/side yards may be up to 6 feet.`,
+            mockResults: [
+                { type: "error", title: "Setback Violation - Primary Structure", description: "The proposed building is placed 18 feet from the front property line. Chesterfield zoning code requires a minimum front yard setback of 25 feet for this zone.", ref: "Chesterfield Code § 17.12.040" },
+                { type: "error", title: "Maximum Building Height Exceeded", description: "The architectural elevation indicates a height of 38 feet to the roof peak. The maximum allowable height for this zone is 35 feet.", ref: "Chesterfield Code § 17.12.050" },
+                { type: "warning", title: "Parking Space Ratio Near Limit", description: "The plan includes exactly 2 off-street parking spaces. While this meets the minimum requirement, any future conversion of the garage may trigger non-compliance.", ref: "Chesterfield Code § 17.24.020" },
+                { type: "pass", title: "Lot Coverage Ratio", description: "The total building footprint covers 28% of the lot, which is within the maximum allowable lot coverage of 30%.", ref: "Chesterfield Code § 17.12.030" }
+            ]
+        },
+        baldwin: {
+            name: "Baldwin Borough Zoning District",
+            label: "Baldwin",
+            rules: `ZONING AND BUILDING RULES FOR BALDWIN BOROUGH RESIDENTIAL DISTRICT (R-2):
+            1. Setbacks: Minimum front yard setback is 30 feet. Minimum rear yard setback is 25 feet. Minimum side yard setback is 8 feet.
+            2. Building Height: Maximum allowable building height is 40 feet or 3 stories, whichever is less.
+            3. Lot Coverage: Total building footprint must not exceed 35% of the total lot size.
+            4. Parking: A minimum of 2 off-street parking spaces must be provided per dwelling unit. Tandem parking is permitted.
+            5. Fencing: Fences in the front yard must not exceed 3 feet in height. Fences in the rear/side yards may be up to 8 feet.
+            6. Accessory Structures: Detached garages and sheds may not exceed 600 sq ft and must be at least 5 feet from any property line.`,
+            mockResults: [
+                { type: "error", title: "Front Yard Setback Violation", description: "The proposed structure is 22 feet from the front property line. Baldwin Borough requires a minimum of 30 feet for all primary structures in R-2 districts.", ref: "Baldwin Borough Code § 235-12.B" },
+                { type: "warning", title: "Accessory Structure Size Near Limit", description: "The detached garage is 580 sq ft, approaching the 600 sq ft maximum. Any additions or modifications may trigger a variance requirement.", ref: "Baldwin Borough Code § 235-18.C" },
+                { type: "pass", title: "Building Height Compliant", description: "The proposed structure is 32 feet to ridge — well within the 40-foot maximum for this district.", ref: "Baldwin Borough Code § 235-12.D" },
+                { type: "pass", title: "Lot Coverage Compliant", description: "Total building footprint is 31% of the lot, within the 35% maximum.", ref: "Baldwin Borough Code § 235-12.E" }
+            ]
+        }
+    };
+
+    let selectedCity = 'chesterfield';
+
+    // --- City Card Selection ---
+    const cityCards = document.querySelectorAll('.city-card');
+    cityCards.forEach(card => {
+        card.addEventListener('click', () => {
+            selectedCity = card.dataset.city;
+            cityCards.forEach(c => {
+                c.classList.remove('active');
+                c.querySelector('.city-card-status').textContent = 'Click to select';
+            });
+            card.classList.add('active');
+            card.querySelector('.city-card-status').textContent = '✓ Selected';
+        });
+    });
+
     // --- File Upload Logic ---
     dropZone.addEventListener('click', () => fileInput.click());
 
@@ -180,17 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LIVE GROQ API LOGIC ---
     async function runLiveGroqScan(documentData, isPdf, apiKey) {
-        // Step 1: Set Rules
+        // Step 1: Set Rules based on selected city
         progressBar.style.width = "40%";
-        statusText.innerText = "Loading regulatory rules...";
-        const rulesText = `
-        ZONING AND BUILDING RULES FOR CHESTERFIELD ZONE R-1 (Single Family Residential):
-        1. Setbacks: Minimum front yard setback is 25 feet. Minimum rear yard setback is 20 feet. Minimum side yard setback is 10 feet.
-        2. Building Height: Maximum allowable building height is 35 feet.
-        3. Lot Coverage: Total building footprint must not exceed 30% of the total lot size.
-        4. Parking: A minimum of 2 off-street parking spaces must be provided per dwelling unit.
-        5. Fencing: Fences in the front yard must not exceed 4 feet in height. Fences in the rear/side yards may be up to 6 feet.
-        `;
+        const cityData = CITY_RULES[selectedCity];
+        statusText.innerText = `Loading ${cityData.label} regulatory rules...`;
+        const rulesText = cityData.rules;
 
         // Step 2: Extract Text
         progressBar.style.width = "60%";
@@ -314,13 +361,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(interval);
                 setTimeout(() => {
                     scanningStatus.classList.add('hidden');
-                    displayResults(mockResults);
+                    displayResults(CITY_RULES[selectedCity].mockResults);
                 }, 500);
             }
         }, 400);
     }
 
-    // Pre-programmed realistic results for presentation fallback
     const mockResults = [
         {
             type: "error",
