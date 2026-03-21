@@ -2,7 +2,7 @@
 const CONFIG = {
     // Replace with your actual live Groq API key for presentation
     // If left empty or invalid, the system will seamlessly fall back to the Mock AI
-    GROQ_API_KEY: "", // Add your Groq API key here (never commit real keys to git)
+    GROQ_API_KEY: "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", // Add your Groq API key here (never commit real keys to git)
 
     // The public URL where the Chesterfield zoning rules are hosted
     RULES_URL: "https://raw.githubusercontent.com/SwiftPermit/sample/main/chesterfield_rules.txt"
