@@ -50,7 +50,7 @@ export default function SubmitPermit() {
 
   const Sidebar = () => (
     <aside className="sidebar">
-      <div className="sidebar-logo" style={{ padding: '1.5rem 1rem' }}>
+      <div className="sidebar-logo" style={{ padding: '1.5rem 1rem', cursor: 'pointer' }} onClick={() => navigate('/')}>
         <LogoGraphic size={44} style={{ color: 'var(--white)' }} />
       </div>
 
