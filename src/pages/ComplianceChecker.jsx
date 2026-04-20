@@ -1,0 +1,469 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LayoutDashboard, FileText, Upload, AlertCircle, CheckCircle, XCircle, ArrowRight, PlayCircle, Settings, LogOut, CheckSquare, Bell, AlertTriangle, PlusCircle, Download, Trash2 } from 'lucide-react'
+import LogoGraphic from '../components/LogoGraphic.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
+
+const CITY_RULES = {
+  Chesterfield: {
+    title: "Chesterfield",
+    rules: `
+      1. Maximum building height is 35 feet.
+      2. Minimum front yard setback is 25 feet.
+      3. Maximum lot coverage is 45%.
+      4. At least 2 off-street parking spaces required per dwelling unit.
+    `,
+    mockResults: [
+      {
+        type: "error",
+        title: "Setback Violation - Primary Structure",
+        description: "The proposed building is placed 18 feet from the front property line. Chesterfield zoning code requires a minimum front yard setback of 25 feet for this zone.",
+        ref: "Chesterfield Code § 17.12.040"
+      },
+      {
+        type: "error",
+        title: "Maximum Building Height Exceeded",
+        description: "The architectural elevation indicates a height of 38 feet to the roof peak. The maximum allowable height for this zone is 35 feet.",
+        ref: "Chesterfield Code § 17.12.050"
+      },
+      {
+        type: "warning",
+        title: "Parking Space Ratio Near Limit",
+        description: "The plan includes exactly 2 off-street parking spaces. While this meets the minimum requirement, any future conversion of the garage may trigger non-compliance.",
+        ref: "Chesterfield Code § 17.24.020"
+      },
+      {
+        type: "pass",
+        title: "Lot Coverage Ratio",
+        description: "The total building footprint covers 32% of the lot, which is well within the maximum allowable lot coverage of 45%.",
+        ref: "Chesterfield Code § 17.12.030"
+      }
+    ]
+  },
+  Baldwin: {
+    title: "Baldwin",
+    rules: `
+      1. Maximum building height is 40 feet.
+      2. Minimum front yard setback is 30 feet.
+      3. Maximum lot coverage is 50%.
+      4. Requires permeable driveway surfaces for new constructions.
+    `,
+    mockResults: [
+      {
+        type: "error",
+        title: "Driveway Permeability Violation",
+        description: "The plan specifies a solid concrete driveway. Baldwin requires permeable surfaces (e.g., permeable pavers or gravel) for all new residential driveway constructions.",
+        ref: "Baldwin Const. Standard § 4.1"
+      },
+      {
+        type: "warning",
+        title: "Building Height Nearing Limit",
+        description: "The planned height is 39 feet, which is very close to the absolute 40 feet limit. Ensure final grade calculations do not push the height over the maximum.",
+        ref: "Baldwin Zoning Code § 22-A"
+      },
+      {
+        type: "pass",
+        title: "Front Yard Setback",
+        description: "The 32-foot front yard setback complies with the minimum 30-foot requirement for this neighborhood.",
+        ref: "Baldwin Zoning Code § 18-B"
+      },
+      {
+        type: "pass",
+        title: "Lot Coverage Compliance",
+        description: "Calculated lot coverage is 41%, perfectly under the 50% threshold allowed for this plot.",
+        ref: "Baldwin Zoning Code § 15-E"
+      }
+    ]
+  }
+}
+
+export default function ComplianceChecker() {
+  const navigate = useNavigate()
+  const { user, logout, settings } = useAuth()
+  const [activeNav, setActiveNav] = useState('checker')
+  
+  const [city, setCity] = useState('Chesterfield')
+  const [file, setFile] = useState(null)
+  const [scanning, setScanning] = useState(false)
+  const [status, setStatus] = useState('')
+  const [progress, setProgress] = useState(0)
+  const [results, setResults] = useState(null)
+  const [apiError, setApiError] = useState(null)
+
+  const handleClear = () => {
+    setFile(null)
+    setResults(null)
+    setApiError(null)
+    setProgress(0)
+    setStatus('')
+  }
+
+  const exportResults = () => {
+    if (!results) return
+    const city = results.length > 0 ? 'Selected City' : 'N/A'
+    let content = `SwiftPermit — Compliance Analysis Report
+==========================================
+Generated: ${new Date().toLocaleString()}
+File: ${file?.name || 'Unknown'}
+
+[SUMMARY]
+`
+    const errors = results.filter(r => r.type === 'error').length
+    const warnings = results.filter(r => r.type === 'warning').length
+    const passes = results.filter(r => r.type === 'pass').length
+    content += `Violations: ${errors}\nWarnings:   ${warnings}\nPassed:     ${passes}\n\n[DETAILED FINDINGS]\n${'─'.repeat(42)}\n`
+    results.forEach(r => {
+      const label = r.type === 'error' ? '[VIOLATION]' : r.type === 'warning' ? '[WARNING]  ' : '[PASS]     '
+      content += `\n${label} ${r.title}\n`
+      content += `Description: ${r.description}\n`
+      content += `Reference:   ${r.ref}\n`
+    })
+    content += `\n${'─'.repeat(42)}\nGenerated by SwiftPermit AI Rules Engine\n`
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `SwiftPermit_Report_${file?.name || 'results'}_${Date.now()}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0])
+      setResults(null)
+    }
+  }
+
+  const runMockFallback = () => {
+    let currentProgress = 20
+    setStatus("Simulating complex architectural analysis locally...")
+    
+    const interval = setInterval(() => {
+      currentProgress += Math.random() * 15
+      if (currentProgress > 100) currentProgress = 100
+      setProgress(currentProgress)
+
+      if (currentProgress >= 50 && currentProgress < 80) {
+        setStatus(`Cross-referencing ${CITY_RULES[city].title} Zoning Code...`)
+      } else if (currentProgress >= 80 && currentProgress < 100) {
+        setStatus("Generating fallback compliance report...")
+      }
+
+      if (currentProgress === 100) {
+        clearInterval(interval)
+        setTimeout(() => {
+          setScanning(false)
+          setResults(CITY_RULES[city].mockResults)
+        }, 500)
+      }
+    }, 400)
+  }
+
+  const runAnalysis = async () => {
+    // Check if we have a global key
+    const apiKey = settings?.groqKey?.trim()
+
+    // Debug: log key status (masked)
+    console.log('[SwiftPermit] API key present:', !!apiKey, apiKey ? `(starts with: ${apiKey.slice(0,6)}...)` : '(empty)')
+
+    if (!file) {
+      setApiError('Please select a file to analyze.')
+      return
+    }
+    
+    setScanning(true)
+    setProgress(10)
+    setResults(null)
+    setApiError(null)
+
+    if (!apiKey) {
+      console.log('[SwiftPermit] No API key — running mock fallback')
+      runMockFallback()
+      return
+    }
+
+    console.log('[SwiftPermit] Calling Groq API...')
+
+    // Live AI Mode
+    try {
+      setStatus("Extracting text data from document...")
+      let documentText = "Simulated text extracted from document. Real extraction requires a full parser."
+      if (file && file.name.endsWith('.txt')) {
+        documentText = await file.text()
+      }
+      setProgress(40)
+
+      setStatus(`Sending ${CITY_RULES[city].title} building regulations to Groq...`)
+      const systemMessage = `
+        You are an expert municipal zoning and building code reviewer for SwiftPermit.
+        Compare the provided "Building Plan" against the "Zoning Rules".
+        
+        RULES:
+        ${CITY_RULES[city].rules}
+        
+        Output a strictly valid JSON array of objects representing compliance issues found. Each object must have:
+        - "type": "error" or "warning" or "pass"
+        - "title": A short title of the issue
+        - "description": A clear description of why it passes/fails
+        - "ref": The specific rule reference it relates to
+        
+        If there are no errors, generate at least 2 "pass" records.
+        CRITICAL: ONLY RETURN THE JSON ARRAY. NO MARKDOWN TICKS.
+      `
+      
+      const userMessage = `BUILDING PLAN TEXT:\n${documentText}`
+      
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemMessage },
+            { role: "user", content: userMessage }
+          ],
+          temperature: 0.1
+        })
+      })
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        console.error('Groq API error body:', errBody)
+        throw new Error(`Groq API failed: ${res.status} — ${errBody?.error?.message || 'Unknown error'}`)
+      }
+      setProgress(85)
+      
+      const data = await res.json()
+      setProgress(100)
+      
+      let rawText = data.choices[0].message.content
+      rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim()
+      
+      setResults(JSON.parse(rawText))
+    } catch (err) {
+      console.error('[SwiftPermit] Groq error:', err)
+      setApiError(`Groq API Error: ${err.message}`)
+      runMockFallback()
+    } finally {
+      if (progress === 100) {
+        setTimeout(() => setScanning(false), 500)
+      }
+    }
+  }
+
+  const SummaryBadge = ({ type, count }) => {
+    let bg = type === 'error' ? 'var(--red-50)' : type === 'warning' ? '#fef3c7' : 'var(--emerald-faint)'
+    let col = type === 'error' ? 'var(--red-500)' : type === 'warning' ? '#d97706' : 'var(--emerald)'
+    let Icon = type === 'error' ? XCircle : type === 'warning' ? AlertTriangle : CheckCircle
+    return (
+      <div style={{ background: bg, color: col, padding: '1rem', borderRadius: 12, display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+        <Icon size={28} />
+        <div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1 }}>{count}</div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginTop: 4 }}>
+            {type === 'pass' ? 'Passed' : type === 'error' ? 'Errors' : 'Warnings'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="dashboard-layout">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-logo" style={{ padding: '1.5rem 1rem' }}>
+          <LogoGraphic size={44} style={{ color: 'var(--white)' }} />
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="sidebar-section-label">Main</div>
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, action: () => navigate('/dashboard') },
+            { id: 'checker',   label: 'Permit Checker', icon: <CheckSquare size={18} />, action: () => {} },
+            { id: 'submit',    label: 'Submit Permit',  icon: <PlusCircle size={18} />, action: () => navigate('/submit') },
+          ].map(item => (
+            <button
+              key={item.id}
+              className={`sidebar-item ${item.id === 'checker' ? 'active' : ''}`}
+              onClick={() => item.action?.()}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sidebar-section-label" style={{ padding: '0 0.875rem 0.5rem', opacity: 0.5 }}>Account</div>
+          <button className={`sidebar-item ${activeNav === 'notifications' ? 'active' : ''}`} onClick={() => navigate('/dashboard')}>
+            <Bell size={18} /> Notifications
+          </button>
+          <button className={`sidebar-item ${activeNav === 'settings' ? 'active' : ''}`} onClick={() => navigate('/dashboard')} style={{ width: '100%', marginBottom: 4 }}>
+            <Settings size={18} /> Settings
+          </button>
+          <button className="sidebar-item" onClick={handleLogout} style={{ width: '100%' }}>
+            <LogOut size={18} /> Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Area */}
+      <main className="dashboard-main">
+        <div className="dashboard-topbar">
+          <div>
+            <div className="page-title">Permit Checker</div>
+            <div className="page-subtitle">Upload construction floor plans or rules to instantly verify adherence against city zoning codes.</div>
+          </div>
+
+          <div className="topbar-user">
+            <div className="topbar-user-info">
+              <div className="topbar-user-name">{user?.name}</div>
+              <div className="topbar-user-role">Developer</div>
+            </div>
+            <div className="topbar-avatar">{user?.initials}</div>
+          </div>
+        </div>
+
+        {/* Workspace controls */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '800px' }}>
+          
+          <div className="section-card" style={{ padding: '2rem' }}>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.15rem' }}>Select Application Location</h3>
+            
+            {/* City Dropdown */}
+            <div style={{ marginBottom: '2rem', maxWidth: '400px' }}>
+              <select 
+                className="city-select"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              >
+                {Object.keys(CITY_RULES).map(c => (
+                  <option key={c} value={c}>{CITY_RULES[c].title}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Drop Zone */}
+            <div 
+              style={{
+                border: '2px dashed var(--gray-300)', borderRadius: 12, padding: '2rem 1.5rem', 
+                textAlign: 'center', cursor: 'pointer', background: 'var(--gray-50)', marginBottom: '1.5rem',
+                position: 'relative', minHeight: '160px', display: 'flex', flexDirection: 'column', justifyContent: 'center'
+              }}
+            >
+              <input 
+                type="file" 
+                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%' }}
+                onChange={handleFileChange}
+                accept=".txt,.pdf"
+              />
+              <Upload size={28} color="var(--gray-400)" style={{ margin: '0 auto 0.75rem' }} />
+              {file ? (
+                <p style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--emerald)' }}>Selected: {file.name}</p>
+              ) : (
+                <>
+                  <p style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--gray-800)' }}>Drag & Drop Building Plans Here</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginTop: 4 }}>or click to browse (.pdf or .txt documents)</p>
+                </>
+              )}
+            </div>
+
+            {/* Scanning Overlay */}
+            {scanning && (
+              <div style={{ background: 'var(--gray-100)', padding: '1.5rem', borderRadius: 12, marginBottom: '1.5rem' }}>
+                <p style={{ fontWeight: 600, marginBottom: '0.75rem', color: 'var(--navy)' }}>{status}</p>
+                <div style={{ height: 8, background: 'var(--gray-200)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'var(--emerald)', width: `${progress}%`, transition: 'width 0.3s ease' }} />
+                </div>
+              </div>
+            )}
+
+            {/* Persistent Error Banner */}
+            {apiError && (
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
+                padding: '0.875rem 1rem', marginBottom: '1rem',
+                display: 'flex', alignItems: 'flex-start', gap: '0.75rem'
+              }}>
+                <AlertCircle size={18} style={{ color: 'var(--red-500)', flexShrink: 0, marginTop: 1 }} />
+                <span style={{ color: '#b91c1c', fontSize: '0.875rem', lineHeight: 1.5 }}>{apiError}</span>
+              </div>
+            )}
+
+            {/* Action Buttons Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                className="btn btn-primary"
+                style={{ padding: '0.75rem 2rem', borderRadius: 8, fontSize: '0.95rem' }}
+                onClick={runAnalysis}
+                disabled={scanning || !file}
+              >
+                {scanning ? 'Analyzing...' : 'Analyze Plan against Zoning Rules'} <PlayCircle size={18} />
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '0.75rem 1.25rem', borderRadius: 8, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                onClick={handleClear}
+                disabled={scanning}
+              >
+                <Trash2 size={16} /> Clear
+              </button>
+            </div>
+          </div>
+
+          {/* Results Panel */}
+          {results && (
+            <div className="section-card" style={{ padding: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--gray-200)', paddingBottom: '1rem' }}>
+                <h3 style={{ margin: 0 }}>Analysis Results</h3>
+                <button
+                  className="btn btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1.1rem', borderRadius: 8, fontSize: '0.875rem' }}
+                  onClick={exportResults}
+                >
+                  <Download size={15} /> Export Report
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <SummaryBadge type="error" count={results.filter(r => r.type === 'error').length} />
+                <SummaryBadge type="warning" count={results.filter(r => r.type === 'warning').length} />
+                <SummaryBadge type="pass" count={results.filter(r => r.type === 'pass').length} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {results.map((r, i) => (
+                  <div key={i} style={{ 
+                    padding: '1.25rem', borderRadius: 8, 
+                    borderLeft: `4px solid ${r.type === 'error' ? 'var(--red-500)' : r.type === 'warning' ? '#f59e0b' : 'var(--emerald)'}`,
+                    background: 'var(--gray-50)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <h4 style={{ color: 'var(--gray-900)', fontSize: '1.05rem' }}>{r.title}</h4>
+                      <span style={{ fontSize: '0.8rem', background: 'var(--gray-200)', padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>{r.type.toUpperCase()}</span>
+                    </div>
+                    <p style={{ color: 'var(--gray-600)', fontSize: '0.9rem', marginBottom: '0.75rem', lineHeight: 1.5 }}>{r.description}</p>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', fontWeight: 600 }}>Reference: {r.ref}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+      </main>
+    </div>
+  )
+}
