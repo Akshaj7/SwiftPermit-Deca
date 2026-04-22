@@ -91,7 +91,7 @@ export default function LandingPage() {
       <nav className="navbar">
         <div className="navbar-inner">
           <a href="#" className="navbar-logo" onClick={e => { e.preventDefault(); window.scrollTo(0,0) }} style={{ padding: 0 }}>
-            <LogoGraphic size={44} />
+            <LogoGraphic size={44} variant="dark" />
           </a>
           <div className="navbar-links">
             <a href="#features">Features</a>

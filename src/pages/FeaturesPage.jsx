@@ -32,7 +32,7 @@ export default function FeaturesPage() {
       <nav className="navbar">
         <div className="navbar-inner">
           <a href="#" className="navbar-logo" onClick={e => { e.preventDefault(); navigate('/') }} style={{ padding: 0 }}>
-            <LogoGraphic size={44} />
+            <LogoGraphic size={44} variant="dark" />
           </a>
           <div className="navbar-links">
             <a href="#/features">Features</a>
@@ -68,8 +68,8 @@ export default function FeaturesPage() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-inner">
-          <div className="footer-logo">
-            <LogoGraphic size={32} style={{ color: 'var(--white)' }} />
+          <div className="footer-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
+            <LogoGraphic size={32} variant="white" style={{ color: 'var(--white)' }} />
           </div>
           <span className="footer-copy">© 2026 SwiftPermit. All rights reserved.</span>
         </div>

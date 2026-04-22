@@ -83,8 +83,8 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-header">
-        <div className="login-logo" style={{ padding: 0 }}>
-          <LogoGraphic size={64} style={{ color: 'var(--white)' }} />
+        <div className="login-logo" style={{ padding: 0, cursor: 'pointer' }} onClick={() => navigate('/')}>
+          <LogoGraphic size={64} variant="white" style={{ color: 'var(--white)' }} />
         </div>
         <h1 className="login-title">{isSignUp ? 'Create an account' : 'Welcome back'}</h1>
         <p className="login-subtitle">{isSignUp ? 'Sign up to get started' : 'Sign in to your account'}</p>

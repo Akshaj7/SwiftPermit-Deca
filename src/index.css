@@ -778,6 +778,7 @@ input::placeholder { color: var(--gray-400); }
   margin-bottom: 2rem;
 }
 @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } }
 
 .stat-card {
   background: var(--white);
@@ -925,6 +926,7 @@ tbody td:first-child { font-weight: 600; color: var(--gray-900); }
 
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 1.75rem;
@@ -1011,6 +1013,7 @@ tbody td:first-child { font-weight: 600; color: var(--gray-900); }
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--gray-100);
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .drawer-footer .btn { flex: 1; justify-content: center; border-radius: var(--radius); }
@@ -1085,3 +1088,93 @@ tbody td:first-child { font-weight: 600; color: var(--gray-900); }
   transition: var(--transition);
 }
 .action-btn:hover { background: var(--gray-100); }
+
+/* =============================================
+   Mobile Responsiveness
+   ============================================= */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding-bottom: 0;
+  }
+  .dashboard-main {
+    margin-left: 0;
+    padding: 1.25rem;
+    min-height: auto;
+  }
+  .sidebar-logo {
+    justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .sidebar-item {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.875rem;
+  }
+  .sidebar-bottom, .sidebar-section-label {
+    display: none;
+  }
+  .dashboard-topbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .page-title {
+    font-size: 1.35rem;
+  }
+  .page-subtitle {
+    display: none;
+  }
+  .topbar-user {
+    padding: 0;
+    align-items: center;
+  }
+  .topbar-user-info {
+    display: none;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .navbar-inner {
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+  .navbar-links {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid, .review-stats {
+    grid-template-columns: 1fr;
+  }
+  .hero-title {
+    font-size: 2.25rem;
+  }
+  .review-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  .review-value {
+    text-align: left !important;
+  }
+}

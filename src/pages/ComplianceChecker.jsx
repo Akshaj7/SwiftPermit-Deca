@@ -403,7 +403,7 @@ File: ${file?.name || 'Unknown'}
             )}
 
             {/* Action Buttons Row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-primary"
                 style={{ padding: '0.75rem 2rem', borderRadius: 8, fontSize: '0.95rem' }}
@@ -426,7 +426,7 @@ File: ${file?.name || 'Unknown'}
           {/* Results Panel */}
           {results && (
             <div className="section-card" style={{ padding: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--gray-200)', paddingBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--gray-200)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <h3 style={{ margin: 0 }}>Analysis Results</h3>
                 <button
                   className="btn btn-secondary"
@@ -437,7 +437,7 @@ File: ${file?.name || 'Unknown'}
                 </button>
               </div>
               
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
                 <SummaryBadge type="error" count={results.filter(r => r.type === 'error').length} />
                 <SummaryBadge type="warning" count={results.filter(r => r.type === 'warning').length} />
                 <SummaryBadge type="pass" count={results.filter(r => r.type === 'pass').length} />
